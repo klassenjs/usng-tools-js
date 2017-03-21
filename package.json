@@ -1,0 +1,32 @@
+{
+	"name": "usng-tools-js",
+	"version": "1.0.0",
+	"description": "Library to convert USNG coordinates to and from Latitude/Longitude.  Supports truncated coordinates.",
+	"main": "usng3.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/klassenjs/usng_tools_js.git"
+	},
+	"keywords": [
+		"USNG"
+	],
+	"author": {
+		"name": "Jim Klassen",
+		"email": "klassen.js@gmail.com"
+	},
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/klassenjs/usng_tools_js/issues"
+	},
+	"homepage": "https://github.com/klassenjs/usng_tools_js#readme",
+	"devDependencies": {
+		"babel-eslint": "^6.1.2",
+		"eslint": "^3.18.0",
+		"grunt": "~1.0.1",
+		"gruntify-eslint": "~3.1.0"
+	},
+	"dependencies": {}
+}
