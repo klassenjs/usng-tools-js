@@ -67,23 +67,16 @@ module.exports = function USNG3() {
     /*eslint-enable*/
 
     var utm_proj = require("./usng-utm.js");
+    var Proj4js  = require("proj4");
 
-    // Use Proj4JS for Universal Polar Stereographic if available.
-    var north_proj;
-    var south_proj;
-    var ll_proj;
-    if(typeof Proj4js == "object") {
-        Proj4js.defs["EPSG:32661"] = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
-        Proj4js.defs["EPSG:32761"] = "+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
-        Proj4js.defs["EPSG:4326"] = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
-        north_proj = new Proj4js.Proj('EPSG:32661');
-        south_proj = new Proj4js.Proj('EPSG:32761');
-        ll_proj    = new Proj4js.Proj('EPSG:4326');
-    }
+    // Use Proj4JS for Universal Polar Stereographic.
+    var north_proj = new Proj4js.Proj('+proj=stere +lat_0=90 +lat_ts=90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
+    var south_proj = new Proj4js.Proj('+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
+    var ll_proj    = new Proj4js.Proj('EPSG:4326');
 
     // http://en.wikipedia.org/wiki/Great-circle_distance
     // http://en.wikipedia.org/wiki/Vincenty%27s_formulae
-    this.llDistance = function(ll_start, ll_end)
+    function llDistance(ll_start, ll_end)
     {
         var lat_s = ll_start.lat * Math.PI / 180;
         var lat_f = ll_end.lat * Math.PI / 180;
@@ -170,6 +163,7 @@ module.exports = function USNG3() {
         var utm_easting = 0;
         var utm_northing = 0;
 
+        utm_zone = +utm_zone;
         var grid_square_set = utm_zone % 6;
         var ns_grid;
         var ew_grid;
@@ -237,7 +231,7 @@ module.exports = function USNG3() {
             }
             if(ll_utm_zone !== utm_zone) {
                 throw("USNG: calculated coordinate not in correct UTM zone! Supplied: " +
-                      utm_zone + grid_zone + " Calculated: " + ll_utm_zone + ll_grid_zone);
+                      utm_zone + " Calculated: " + ll_utm_zone);
             }
             if(ll_grid_zone !== grid_zone) {
                 throw("USNG: calculated coordinate not in correct grid zone! Supplied: " +
@@ -307,7 +301,7 @@ module.exports = function USNG3() {
         var utm_zone = null;
 
         // Remove Whitespace (shouldn't be any)
-        usng = usng.replace(/ /g, "");
+        usng = usng.replace(/ /g, "").toUpperCase();
 
         // Strip Coordinate values off of end, if any
         // This will be any trailing digits.
@@ -342,7 +336,7 @@ module.exports = function USNG3() {
             re = new RegExp("([A-Z])");
             fields = re.exec(usng);
             if(fields) {
-                grid_zon = fields[1];
+                grid_zone = fields[1];
             }
         }
 
@@ -384,9 +378,9 @@ module.exports = function USNG3() {
                 for(var grid_zone_idx = 0; grid_zone_idx < 20; grid_zone_idx++) {
                     grid_zone = GridZones[grid_zone_idx];
                     try {
-                        var result = this.toLonLat((utm_zone % 60) + grid_zone + grid_square + digits, null, true); // usng should be [A-Z][A-Z][0-9]+
-
-                        var arc_distance = this.llDistance(initial_lonlat, result);
+                        var trial_usng = (utm_zone % 60) + grid_zone + grid_square + digits;
+                        var result = toLonLat(trial_usng, null, true); // usng should be [A-Z][A-Z][0-9]+
+                        var arc_distance = llDistance(initial_lonlat, result);
                         // console.log(utm_zone + grid_zone + grid_square + digits + " " + arc_distance);
                         if(arc_distance < min_arc_distance) {
                             min_arc_distance = arc_distance;
@@ -394,7 +388,7 @@ module.exports = function USNG3() {
                             min_grid_zone = grid_zone;
                         }
                     } catch(e) {
-                        ; // console.log("USNG: upstream: "+e); // catch range errors and ignore
+                        ; // console.log("USNG: upstream: " + e + " for trial " + trial_usng); // catch range errors and ignore
                     }
                 }
             }
@@ -408,9 +402,9 @@ module.exports = function USNG3() {
             for(var grid_zone_idx in ups_zones) {
                 grid_zone = ups_zones[grid_zone_idx];
                 try {
-                    var result = this.toLonLat(grid_zone + grid_square + digits, null, true); // usng should be [A-Z][A-Z][0-9]+
+                    var result = toLonLat(grid_zone + grid_square + digits, null, true); // usng should be [A-Z][A-Z][0-9]+
 
-                    var arc_distance = this.llDistance(initial_lonlat, result);
+                    var arc_distance = llDistance(initial_lonlat, result);
                     // console.log(grid_zone + grid_square + digits + " " + arc_distance);
                     if(arc_distance < min_arc_distance) {
                         min_arc_distance = arc_distance;
@@ -484,9 +478,9 @@ module.exports = function USNG3() {
                                 grid_square = ew_grid[ew_idx] + ns_grid[ns_idx];
                                 
                                 // usng should be [A-Z][A-Z][0-9]+
-                                var result = this.toLonLat((utm_zone % 60) + grid_zone + grid_square + digits, null, true);
+                                var result = toLonLat((utm_zone % 60) + grid_zone + grid_square + digits, null, true);
 
-                                var arc_distance = this.llDistance(initial_lonlat, result);
+                                var arc_distance = llDistance(initial_lonlat, result);
                                 // console.log(utm_zone + grid_zone + grid_square + digits + " " + arc_distance);
                                 if(arc_distance < min_arc_distance) {
                                     min_arc_distance = arc_distance;
@@ -524,9 +518,9 @@ module.exports = function USNG3() {
                             grid_square = XLetters[x_idx] + y_zones[y_idx];
                             
                             // usng should be [A-Z][A-Z][0-9]+
-                            var result = this.toLonLat(grid_zone + grid_square + digits, null, true);
+                            var result = toLonLat(grid_zone + grid_square + digits, null, true);
 
-                            var arc_distance = this.llDistance(initial_lonlat, result);
+                            var arc_distance = llDistance(initial_lonlat, result);
                             // console.log(grid_zone + grid_square + digits + " " + arc_distance);
                             if(arc_distance < min_arc_distance) {
                                 min_arc_distance = arc_distance;
@@ -555,9 +549,9 @@ module.exports = function USNG3() {
         }
 
         if(grid_zone === "A" || grid_zone === "B" || grid_zone === "Y" || grid_zone === "Z") {
-            return(this.toUPSFromFullParsedUSNG(grid_zone, grid_square, easting, northing, precision));
+            return(toUPSFromFullParsedUSNG(grid_zone, grid_square, easting, northing, precision));
         } else {
-            return(this.toUTMFromFullParsedUSNG(utm_zone, grid_zone, grid_square, easting, northing, precision, strict));
+            return(toUTMFromFullParsedUSNG(utm_zone, grid_zone, grid_square, easting, northing, precision, strict));
         }
     }
 
@@ -672,14 +666,14 @@ module.exports = function USNG3() {
         ups_y += grid_y;
 
         // Check that the coordinate is within the ups zone and grid zone specified:
-        var ll = { x: ups_x, y: ups_y };
+        var ups = { x: ups_x, y: ups_y };
         if(grid_zone === "A" || grid_zone === "B") {
-            Proj4js.transform(south_proj, ll_proj, ll);
+            ll = Proj4js(south_proj, ll_proj, ups);
             if(ll.y > -80.0) {
                 throw("USNG: Grid Zone A or B but Latitude > -80.");
             }
         } else {
-            Proj4js.transform(north_proj, ll_proj, ll);
+            ll = Proj4js(north_proj, ll_proj, ups);
             if(ll.y < 84.0) {
                 throw("USNG: Grid Zone Y or Z but Latitude < 84.");
             }
@@ -713,21 +707,18 @@ module.exports = function USNG3() {
         // Calculate USNG Grid Zone Designation from Latitude
         // Starts at -80 degrees and is in 8 degree increments
         if(! ((lat > -80) && (lat < 84) )) {
-            if(!north_proj) {
-                throw("USNG: Latitude must be between -80 and 84. (Zones A,B,Y, and Z require Proj4js.)");
-            }
-            
             var grid_zone;
-            var ups_pt = new Proj4js.Point( lon, lat );
+            var ll = {x: lon, y: lat};
+            var ups_pt;
 
             if( lat > 0 ) {
-                Proj4js.transform( ll_proj, north_proj, ups_pt );
+                ups_pt = Proj4js( ll_proj, north_proj, ll );
                 grid_zone = (lon < 0) ? "Y" : "Z";
             } else {
-                Proj4js.transform( ll_proj, south_proj, ups_pt );
+                ups_pt = Proj4js( ll_proj, south_proj, ll );
                 grid_zone = (lon < 0) ? "A" : "B";
             }
-            return this.fromUPS(grid_zone, ups_pt.x, ups_pt.y, precision);
+            return fromUPS(grid_zone, ups_pt.x, ups_pt.y, precision);
         }
 
         var grid_zone = GridZones[Math.floor((lat - (-80.0)) / 8)];
@@ -736,19 +727,19 @@ module.exports = function USNG3() {
         return fromUTM(utm_zone, grid_zone, utm_pt.utm_easting, utm_pt.utm_northing, precision);
     }
 
-    this.toLonLat = function(usng, initial_lonlat, strict)
+    function toLonLat(usng, initial_lonlat, strict)
     {
-        var result = this.toUTM(usng, initial_lonlat, strict);
+        var result = toUTM(usng, initial_lonlat, strict);
         var grid_zone = result.grid_zone;
         var ll;
 
         if(south_proj && (grid_zone === "A" || grid_zone === "B")) {
             var pt = {x: result.x, y: result.y};
-            Proj4js.transform( south_proj, ll_proj, pt );
+            pt = Proj4js( south_proj, ll_proj, pt );
             ll = { lon: pt.x, lat: pt.y, precision: result.precision, usng: result.usng };
         } else if(north_proj && (grid_zone === "Y" || grid_zone === "Z")) {
             var pt = {x: result.x, y: result.y};
-            Proj4js.transform( north_proj, ll_proj, pt );
+            pt = Proj4js( north_proj, ll_proj, pt );
             ll = { lon: pt.x, lat: pt.y, precision: result.precision, usng: result.usng };
         } else {
             ll = utm_proj.invProj(result.zone, result.easting, result.northing);
@@ -757,4 +748,6 @@ module.exports = function USNG3() {
         }
         return (ll);
     }
+
+    this.toLonLat = toLonLat;
 }

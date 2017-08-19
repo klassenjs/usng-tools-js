@@ -36,7 +36,7 @@ module.exports = function(grunt) {
             options: {
                 configFile: 'eslint.config.js',
             },
-            target: ['usng3.js', 'usng-utm.js']
+            target: ['usng3.js', 'usng-utm.js', 'test.js']
         }
 	});
 

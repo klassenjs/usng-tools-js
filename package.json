@@ -4,7 +4,7 @@
 	"description": "Library to convert USNG coordinates to and from Latitude/Longitude.  Supports truncated coordinates.",
 	"main": "usng3.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "node test.js"
 	},
 	"repository": {
 		"type": "git",
@@ -28,5 +28,7 @@
 		"grunt": "~1.0.1",
 		"gruntify-eslint": "~3.1.0"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"proj4": "^2.4.3"
+	}
 }
