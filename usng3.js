@@ -697,12 +697,12 @@ module.exports = function USNG3() {
         var lon = lonlat.lon;
         var lat = lonlat.lat;
 
-        // Normalize Latitude and Longitude
-        while(lon < -180) {
-            lon += 180;
+        // Normalize Longitude (-180, 180]
+        while(lon <= -180) {
+            lon += 360;
         }
         while(lon > 180) {
-            lon -= 180;
+            lon -= 360;
         }
 
         // Calculate UTM Zone number from Longitude
