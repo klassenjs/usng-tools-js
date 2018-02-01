@@ -8,11 +8,11 @@ function test_coordinate(lat, lon, digits, expect) {
     var res = u.fromLonLat({lat: lat, lon: lon}, digits);
 
     if ( res === expect ) {
-	console.log("test_coordinate: " + lat + " " + lon + " " + res + " PASSED");
-	passed++;
+        console.log("test_coordinate: " + lat + " " + lon + " " + res + " PASSED");
+        passed++;
     } else {
-	console.log("test_coordinate: " + lat + " " + lon + " " + res + " != " + expect + " FAILED");
-	failed++;
+        console.log("test_coordinate: " + lat + " " + lon + " " + res + " != " + expect + " FAILED");
+        failed++;
     }
 }
 
@@ -21,36 +21,36 @@ function test_usng_parse(usng, lat, lon) {
 
     console.log(usng, lat, lon);
     try {
-	if (lat === undefined) {
-	    res = u.toLonLat(usng)
-	} else {
-	    res = u.toLonLat(usng, {lat: lat, lon: lon});
-	}
+        if (lat === undefined) {
+            res = u.toLonLat(usng)
+        } else {
+            res = u.toLonLat(usng, {lat: lat, lon: lon});
+        }
     } catch(e) {
-	return {error: e};
+        return {error: e};
     }
     return res;
 }
 
 function expect(res, lat, lon, precision) {
     if (res.error) {
-	if(lat == null) {
-	    console.log(res.error + " PASSED");
-	    passed++;
-	} else {
-	    console.log(res.error + " FAILED");
-	    failed++;
-	}
+        if(lat == null) {
+            console.log(res.error + " PASSED");
+            passed++;
+        } else {
+            console.log(res.error + " FAILED");
+            failed++;
+        }
     } else {
-	if ( (Math.abs(res.lat - lat) < 0.00001) &&
-	     (Math.abs(res.lon - lon) < 0.00001) &&
-	     res.precision === precision ) {
-	    console.log(res.lat + " " + res.lon + " " + res.precision + " PASSED");
-	    passed++;
-	} else {
-	    console.log(res.lat + " " + res.lon + " " + res.precision + " FAILED");
-	    failed++;
-	}
+        if ( (Math.abs(res.lat - lat) < 0.00001) &&
+             (Math.abs(res.lon - lon) < 0.00001) &&
+             res.precision === precision ) {
+            console.log(res.lat + " " + res.lon + " " + res.precision + " PASSED");
+            passed++;
+        } else {
+            console.log(res.lat + " " + res.lon + " " + res.precision + " FAILED");
+            failed++;
+        }
     }
     console.log("");
 }
