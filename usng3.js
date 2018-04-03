@@ -70,9 +70,9 @@ module.exports = function USNG3() {
     var Proj4js  = require("proj4");
 
     // Use Proj4JS for Universal Polar Stereographic.
-    var north_proj = new Proj4js.Proj('+proj=stere +lat_0=90 +lat_ts=90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
-    var south_proj = new Proj4js.Proj('+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
-    var ll_proj    = new Proj4js.Proj('EPSG:4326');
+    var north_proj = '+proj=stere +lat_0=90 +lat_ts=90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+    var south_proj = '+proj=stere +lat_0=-90 +lat_ts=-90 +lon_0=0 +k=0.994 +x_0=2000000 +y_0=2000000 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+    var ll_proj    = 'EPSG:4326';
 
     // http://en.wikipedia.org/wiki/Great-circle_distance
     // http://en.wikipedia.org/wiki/Vincenty%27s_formulae
