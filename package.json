@@ -1,6 +1,6 @@
 {
   "name": "usng-tools-js",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Library to convert USNG coordinates to and from Latitude/Longitude.  Supports truncated coordinates.",
   "main": "usng3.js",
   "scripts": {
