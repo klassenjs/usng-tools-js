@@ -4,7 +4,7 @@
  *
  * License:
  *
- * Copyright (c) 2008-2013 James Klassen
+ * Copyright (c) 2008-2022 James Klassen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the 'Software'), to
@@ -46,7 +46,7 @@ module.exports = function USNG3() {
     var EWLetters14 = ['A','B','C','D','E','F','G','H'];
     var EWLetters25 = ['J','K','L','M','N','P','Q','R'];
     var EWLetters36 = ['S','T','U','V','W','X','Y','Z'];
-    
+
     //                  -80  -72  -64  -56  -48  -40  -32  -24  -16  -8    0    8   16   24   32   40   48   56   64   72   (*Latitude)
     //                                                                                                 Handle oddball zone 80-84
     var GridZones    = ['C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'X'];
@@ -476,7 +476,7 @@ module.exports = function USNG3() {
                         for(var ew_idx = 0; ew_idx < 8; ew_idx++) {
                             try {
                                 grid_square = ew_grid[ew_idx] + ns_grid[ns_idx];
-                                
+
                                 // usng should be [A-Z][A-Z][0-9]+
                                 var result = toLonLat((utm_zone % 60) + grid_zone + grid_square + digits, null, true);
 
@@ -516,7 +516,7 @@ module.exports = function USNG3() {
                     for(var x_idx = 0; x_idx < 18; x_idx++) {
                         try {
                             grid_square = XLetters[x_idx] + y_zones[y_idx];
-                            
+
                             // usng should be [A-Z][A-Z][0-9]+
                             var result = toLonLat(grid_zone + grid_square + digits, null, true);
 
@@ -561,7 +561,7 @@ module.exports = function USNG3() {
         if(! ((grid_zone === "A") || (grid_zone === "B") || (grid_zone === "Y") || (grid_zone === "Z"))) {
             throw( "UPS only valid in zones A, B, Y, and Z" );
         }
-        
+
         var grid_square;
 
         var grid_square_x_idx = Math.floor((ups_x - 2000000) / 100000);
@@ -570,15 +570,15 @@ module.exports = function USNG3() {
         if(grid_square_x_idx < 0) {
             grid_square_x_idx += 18;
         }
-        
+
         // south
-        if(grid_zone === "A" || grid_zone === "B") { 
+        if(grid_zone === "A" || grid_zone === "B") {
             if(grid_square_y_idx < 0) {
                 grid_square_y_idx += 24;
             }
             grid_square = XLetters[grid_square_x_idx] + YSLetters[grid_square_y_idx];
             // north
-        } else { 
+        } else {
             if(grid_square_y_idx < 0) {
                 grid_square_y_idx += 14;
             }
@@ -614,7 +614,7 @@ module.exports = function USNG3() {
         if(!Proj4js) {
             throw("USNG: Zones A,B,Y, and Z require Proj4js.");
         }
-        
+
         /* Start at the pole */
         var ups_x = 2000000;
         var ups_y = 2000000;
@@ -639,12 +639,12 @@ module.exports = function USNG3() {
                 y_idx = y_idx - 24;
             }
             break;
-            
+
             // North West half-hemisphere
-        case 'Y': 
+        case 'Y':
             x_idx = x_idx - 18;
             // North East half-hemisphere
-        case 'Z': 
+        case 'Z':
             y_idx = YNLetters.indexOf(grid_square[1]);
             if(x_idx < -7 || x_idx > 6 || y_idx < 0) {
                 throw("USNG: Invalid grid square.");
@@ -682,7 +682,6 @@ module.exports = function USNG3() {
         var usng_string = grid_zone + " " + grid_square + " " + grid_x + " " + grid_y;
         return { grid_zone: grid_zone, x: ups_x, y: ups_y, precision: precision, usng: usng_string };
     }
-
 
     // Converts a lat, lon point (NAD83) into a USNG coordinate string
     // of precision where precision indicates the number of digits used
@@ -750,4 +749,34 @@ module.exports = function USNG3() {
     }
 
     this.toLonLat = toLonLat;
+
+
+    this.toSquare = function(usng, initial_lonlat)
+    {
+        var sw_utm = toUTM(usng, initial_lonlat, false);
+        var scale_factor = Math.pow(10, (5 - sw_utm.precision));
+
+        // Note: only works with UTM for now!
+        // UTM: { zone: utm_zone, easting: utm_easting, northing: utm_northing, precision: precision, usng: usng_string };
+        // UPS: { grid_zone: grid_zone, x: ups_x, y: ups_y, precision: precision, usng: usng_string };
+        var p;
+        if (sw_utm.precision === 0) {
+            p = "100 km";
+        } else if (sw_utm.precision === 1) {
+            p = "10 km";
+        } else if (sw_utm.precison === 2) {
+            p = "1 km";
+        } else {
+            p = scale_factor.toFixed(0) + ' m';
+        }
+
+        return {
+            precision: p,
+            sw: utm_proj.invProj(sw_utm.zone, sw_utm.easting,                sw_utm.northing),
+            nw: utm_proj.invProj(sw_utm.zone, sw_utm.easting,                sw_utm.northing + scale_factor),
+            ne: utm_proj.invProj(sw_utm.zone, sw_utm.easting + scale_factor, sw_utm.northing + scale_factor),
+            se: utm_proj.invProj(sw_utm.zone, sw_utm.easting + scale_factor, sw_utm.northing),
+            c: utm_proj.invProj(sw_utm.zone, sw_utm.easting + (scale_factor / 2.0), sw_utm.northing + (scale_factor / 2.0))
+        };
+    };
 }
